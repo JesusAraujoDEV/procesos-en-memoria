@@ -6,6 +6,34 @@
     <title>Simulación de gestión de procesos-memoria</title>
 </head>
 <body>
-    
+
+    <table>
+        <thead>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Uso de memoria</th>
+        </thead>
+        <tbody class="processes-tbody">
+        </tbody>
+    </table>
+
+    <form action="" class="process-form">
+        <label for="name">Nombre</label>
+        <input type="text" name="name" id="name">
+        <label for="size">Memoria necesaria</label>
+        <input type="number" name="size" id="size">
+        <label for="executionTime">Tiempo máximo de ejecución</label>
+        <input type="number" name="executionTime" id="executionTime">
+        <button type="submit">Agregar proceso</button>
+    </form>
+
+    <form action="" class="mblock-form">
+        <label for="size">Memoria del bloque</label>
+        <input type="number" name="size" id="size">
+        <button type="submit" onclick="">Agregar proceso</button>
+    </form>
+    <button onclick="startSimulation()">Iniciar simulación</button>
+    <button onclick="stopSimulation()">Detener simulación</button>
+    <script src="./js/simulator.js"></script>
 </body>
 </html>

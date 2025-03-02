@@ -1,4 +1,9 @@
-export class MemorySimulator {
+
+
+/// Clases
+
+
+class MemorySimulator {
     constructor(clockSpeed = 1) {
         this.clockSpeed = clockSpeed; // Segundos entre cada verificación de procesos?
         this.interval = null
@@ -7,7 +12,7 @@ export class MemorySimulator {
 
     start() {
         this.interval = setInterval(() => {
-            this.memoryManager.checkProcesses();
+            this.memoryManager.checkProcesses(this.clockSpeed);
         }, this.clockSpeed * 1000);
     }
 
@@ -21,6 +26,16 @@ export class MemorySimulator {
     addProcess(name, size, executionTime) {
         const process = new Process(name, size, executionTime);
         this.memoryManager.assignMemory(process)
+    }
+
+    getProcesses() {
+        const processes = []
+        for (const mBlock of this.memoryManager.memoryBlocks) {
+            if (mBlock.assigned) {
+                processes.push(mBlock.assignedProcess)
+            }
+        }
+        return processes
     }
 }
 
@@ -37,27 +52,28 @@ class MemoryManager {
     }
 
     assignMemory(process) {
-        const assignBlock = null;
-        for (const memoryBlock in this.memoryBlocks) {
-            if (memoryBlock.size > process.size) {
+        let assignedBlock = null;
+        for (const memoryBlock of this.memoryBlocks) {
+            if (memoryBlock.size > process.size && !memoryBlock.assigned) {
                 memoryBlock.assign(process)
+                assignedBlock = memoryBlock
                 break
             }
         }
-        if (assignBlock === null) {
+        if (assignedBlock === null) {
             console.error(`Al proceso ${process.name} no se le pudo asignar un bloque de memoria.`)
-        }
+        }   
     }
 
     checkProcesses(time) {
-        for (const block in this.memoryBlocks) {
-            if (!block.assigned && block.process) {
+        for (const block of this.memoryBlocks) {
+            if (!block.assigned) {
                 continue
             }
 
-            block.process.execute(time)
-            if (!block.assigned && block.process) {
-                continue
+            block.assignedProcess.execute(time)
+            if (!block.assignedProcess.state) {
+                block.unassign()
             }
         }
     }
@@ -74,22 +90,23 @@ class MemoryBlock {
     }
 
     assign(process) {
-        if (!this.assign) {
+        if (!this.assigned) {
             this.assigned = true;
             this.assignedProcess = process
+            this.assignedProcess.activate()
         }
         else {
-            throw new Error(`Este bloque de memoria ${this.id} ya está asignado.`)
+            throw new Error(`El bloque de memoria ${this.id} ya está asignado.`)
         }
     }
 
     unassign() {
-        if (this.assign) {
+        if (this.assigned) {
             this.assigned = false;
             this.assignedProcess = null
         }
         else {
-            throw new Error(`Este bloque de memoria ${this.id} ya está libre.`)
+            throw new Error(`El bloque de memoria ${this.id} ya está libre.`)
         }
     }
 }
@@ -102,7 +119,7 @@ class Process {
         this.name = name;
         this.size = size;
         this.maxExecutionTime = maxExecutionTime;
-        this.executionTime = 0.0;
+        this.executionTime = 0;
         this.state = state;
     }
 
@@ -134,4 +151,58 @@ class Process {
             this.deactivate()
         }
     }
+
+    __str__() {
+        return this.name
+    }
 }
+
+
+// DOM
+
+
+var simulator = new MemorySimulator(1);
+
+function startSimulation() {
+    simulator.start();
+    console.log("aa")
+}
+
+function stopSimulation() {
+    simulator.stop();
+}
+
+
+document.querySelector(".process-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const inputs = e.target.elements;
+    const name = inputs["name"].value;
+    const size = parseFloat(inputs["size"].value);
+    const executionTime = parseFloat(inputs["executionTime"].value);
+    simulator.addProcess(name, size, executionTime);
+})
+
+document.querySelector(".mblock-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const inputs = e.target.elements;
+    const size = parseFloat(inputs["size"].value);
+    simulator.memoryManager.addMemoryBlock(size)
+    console.log(simulator.memoryManager.totalMemory)
+})
+
+function updateTable() {
+    const processes = simulator.getProcesses();
+    const processesTable = document.querySelector(".processes-tbody");
+    processesTable.innerHTML = ""
+    for (const p of processes) {
+        processesTable.innerHTML += `
+        <tr>
+            <td>${p.id}</td>
+            <td>${p.name}</td>
+            <td>${p.size}</td>
+        </tr>
+        `
+    }
+}
+
+setInterval(updateTable, 1000)
