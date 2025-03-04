@@ -25,15 +25,14 @@ class MemorySimulator {
 
     addProcess(name, size, executionTime) {
         const process = new Process(name, size, executionTime);
+        this.memoryManager.processes.push(process)
         this.memoryManager.assignMemory(process)
     }
 
     getProcesses() {
         const processes = []
-        for (const mBlock of this.memoryManager.memoryBlocks) {
-            if (mBlock.assigned) {
-                processes.push(mBlock.assignedProcess)
-            }
+        for (const p of this.memoryManager.processes) {
+            processes.push(p)
         }
         return processes
     }
@@ -47,6 +46,7 @@ class MemoryManager {
     constructor() {
         this.totalMemory = 0.0;
         this.memoryBlocks = [];
+        this.processes = [];
     }
 
     addMemoryBlock(size) {
@@ -58,15 +58,12 @@ class MemoryManager {
     assignMemory(process) {
         let assignedBlock = null;
         for (const memoryBlock of this.memoryBlocks) {
-            if (memoryBlock.size >= process.size && !memoryBlock.assigned) {
+            if (!memoryBlock.assigned && memoryBlock.size >= process.size) {
                 memoryBlock.assign(process)
                 assignedBlock = memoryBlock
                 break
             }
         }
-        if (assignedBlock === null) {
-            console.error(`Al proceso ${process.name} no se le pudo asignar un bloque de memoria.`)
-        }   
     }
 
     checkProcesses(time) {
@@ -76,8 +73,14 @@ class MemoryManager {
             }
 
             block.assignedProcess.execute(time)
-            if (!block.assignedProcess.state) {
+            if (block.assignedProcess.state === "Terminado") {
                 block.unassign()
+
+                for (const p of this.processes) {
+                    if (p.state === "En espera") {
+                        this.assignMemory(p)
+                    }
+                }
             }
         }
     }
@@ -118,7 +121,7 @@ class MemoryBlock {
 class Process {
     static id = 0;
 
-    constructor(name, size, maxExecutionTime, state = false) {
+    constructor(name, size, maxExecutionTime, state = "En espera") {
         this.id = Process.id++;
         this.name = name;
         this.size = size;
@@ -128,31 +131,31 @@ class Process {
     }
 
     activate() {
-        if (!this.state) {
-            this.state = true;
+        if (this.state !== "En ejecución") {
+            this.state = "En ejecución";
         }
         else {
-            throw new Error("Este proceso ya está activo.")
+            throw new Error("Este proceso ya está en ejecución.")
         }
     }
 
-    deactivate() {
-        if (this.state) {
-            this.state = false;
+    finish() {
+        if (this.state !== "Terminado") {
+            this.state = "Terminado";
         }
         else {
-            throw new Error("Este proceso ya está desactivado?.")
+            throw new Error("Este proceso ya ha terminado.")
         }
     }
 
     execute(time) {
-        if (!this.state) {
-            throw new Error("Este proceso no está activo.")
+        if (this.state !== "En ejecución") {
+            throw new Error("Este proceso no está en ejecución.")
         }
 
         this.executionTime += time;
         if (this.executionTime >= this.maxExecutionTime) {
-            this.deactivate()
+            this.finish()
         }
     }
 
@@ -199,15 +202,18 @@ function updateTable() {
     const processesTable = document.querySelector(".processes-tbody");
     processesTable.innerHTML = ""
     for (const p of processes) {
-        processesTable.innerHTML += `
-        <tr>
-            <td>${p.id}</td>
-            <td>${p.name}</td>
-            <td>${p.size}</td>
-            <td>${p.executionTime}</td>
-            <td>${p.maxExecutionTime}</td>
-        </tr>
-        `
+        if (p.state !== "Terminado") {
+            processesTable.innerHTML += `
+            <tr>
+                <td>${p.id}</td>
+                <td>${p.name}</td>
+                <td>${p.size}</td>
+                <td>${p.executionTime}</td>
+                <td>${p.maxExecutionTime}</td>
+                <td>${p.state}</td>
+            </tr>
+            `
+        }
     }
 
     const mBlocks = simulator.getMBlocks();
