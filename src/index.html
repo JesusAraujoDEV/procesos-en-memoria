@@ -3,37 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
     <title>Simulación de gestión de procesos-memoria</title>
 </head>
 <body>
 
+    <h3>Bloques de memoria</h3>
+    <table>
+        <thead>
+            <th>ID</th>
+            <th>Tamaño</th>
+            <th>Asignado</th>
+            <th>Proceso asignado</th>
+        </thead>
+        <tbody class="mblocks-tbody">
+        </tbody>
+    </table>
+
+    <h3>Procesos</h3>
     <table>
         <thead>
             <th>ID</th>
             <th>Nombre</th>
             <th>Uso de memoria</th>
+            <th>Tiempo de ejecución</th>
+            <th>Tiempo máximo de ejecución</th>
         </thead>
         <tbody class="processes-tbody">
         </tbody>
     </table>
 
+    <h4>Crear nuevo proceso</h4>
     <form action="" class="process-form">
         <label for="name">Nombre</label>
-        <input type="text" name="name" id="name">
+        <input type="text" name="name" id="name"><br>
         <label for="size">Memoria necesaria</label>
-        <input type="number" name="size" id="size">
+        <input type="number" name="size" id="size"><br>
         <label for="executionTime">Tiempo máximo de ejecución</label>
-        <input type="number" name="executionTime" id="executionTime">
-        <button type="submit">Agregar proceso</button>
+        <input type="number" name="executionTime" id="executionTime"><br>
+        <button type="submit">Crear</button>
     </form>
 
+    <h4>Crear nuevo bloque de memoria</h4>
     <form action="" class="mblock-form">
         <label for="size">Memoria del bloque</label>
-        <input type="number" name="size" id="size">
-        <button type="submit" onclick="">Agregar proceso</button>
+        <input type="number" name="size" id="size"><br>
+        <button type="submit" onclick="">Crearr</button>
     </form>
+
     <button onclick="startSimulation()">Iniciar simulación</button>
     <button onclick="stopSimulation()">Detener simulación</button>
+
     <script src="./js/simulator.js"></script>
 </body>
 </html>

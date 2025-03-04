@@ -37,6 +37,10 @@ class MemorySimulator {
         }
         return processes
     }
+
+    getMBlocks() {
+        return this.memoryManager.memoryBlocks
+    }
 }
 
 class MemoryManager {
@@ -54,7 +58,7 @@ class MemoryManager {
     assignMemory(process) {
         let assignedBlock = null;
         for (const memoryBlock of this.memoryBlocks) {
-            if (memoryBlock.size > process.size && !memoryBlock.assigned) {
+            if (memoryBlock.size >= process.size && !memoryBlock.assigned) {
                 memoryBlock.assign(process)
                 assignedBlock = memoryBlock
                 break
@@ -200,6 +204,22 @@ function updateTable() {
             <td>${p.id}</td>
             <td>${p.name}</td>
             <td>${p.size}</td>
+            <td>${p.executionTime}</td>
+            <td>${p.maxExecutionTime}</td>
+        </tr>
+        `
+    }
+
+    const mBlocks = simulator.getMBlocks();
+    const mBlocksTable = document.querySelector(".mblocks-tbody");
+    mBlocksTable.innerHTML = ""
+    for (const b of mBlocks) {
+        mBlocksTable.innerHTML += `
+        <tr>
+            <td>${b.id}</td>
+            <td>${b.size}</td>
+            <td>${b.assigned ? 'Si' : 'No'}</td>
+            <td>${b.assigned ? b.assignedProcess.name : 'Ninguno'}</td>
         </tr>
         `
     }
