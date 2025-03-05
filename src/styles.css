@@ -76,6 +76,6 @@ button:hover {
     to { opacity: 1; transform: translateY(0); }
 }
 
-table, form, button {
+table, form {
     animation: fadeIn 0.5s ease-in-out;
 }

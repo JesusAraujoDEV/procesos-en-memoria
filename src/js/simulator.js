@@ -324,4 +324,4 @@ function updateTable() {
     console.log(contador);
 }
 
-//setInterval(updateTable, 1000);
+setInterval(updateTable, 1000);
