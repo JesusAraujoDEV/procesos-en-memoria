@@ -219,8 +219,6 @@ class Process {
     activate() {
         if (this.state !== "En ejecución") {
             this.state = "En ejecución";
-        } else {
-            showError("Este proceso ya está en ejecución.");
         }
     }
 
