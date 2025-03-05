@@ -1,3 +1,15 @@
+// Función para mostrar errores en pantalla
+function showError(message) {
+    const errorLog = document.getElementById("error-log");
+    const errorMsg = document.createElement("p");
+    errorMsg.textContent = message;
+    errorLog.appendChild(errorMsg);
+
+    // Eliminar mensaje después de 5 segundos
+    setTimeout(() => errorMsg.remove(), 5000);
+}
+
+
 class MemorySimulator {
     constructor(clockSpeed = 1) {
         this.clockSpeed = clockSpeed;
@@ -19,9 +31,17 @@ class MemorySimulator {
     }
 
     addProcess(name, size, executionTime) {
-        const process = new Process(name, size, executionTime);
-        this.memoryManager.processes.push(process);
-        this.memoryManager.assignMemory(process);
+        try{
+            const process = new Process(name, size, executionTime);
+            if(!this.memoryManager.assignMemory(process)){
+                return;
+            }
+            this.memoryManager.processes.push(process);
+        }
+        catch(error){
+            console.error(error);
+            showError(error.message);
+        }
     }
 
     getProcesses() {
@@ -47,34 +67,60 @@ class MemoryManager {
         this.totalMemory += size;
     }
 
-    assignMemory(process) {
-        let assignedBlock = null;
-        for (const memoryBlock of this.memoryBlocks) {
-            if (!memoryBlock.assigned && memoryBlock.size >= process.size) {
-                memoryBlock.assign(process);
-                assignedBlock = memoryBlock;
-                break;
+    removeMemoryBlock(id) {
+        const index = this.memoryBlocks.findIndex(block => block.id === id);
+        if (index !== -1) {
+            if (this.memoryBlocks[index].assigned) {
+                showError("No se puede eliminar un bloque de memoria asignado.");
+            } else {
+                this.memoryBlocks.splice(index, 1);
+                showError(`Bloque de memoria ${id} eliminado correctamente.`);
             }
-        }
-
-        // Si no hay memoria suficiente, se intenta hacer swapping
-        if (!assignedBlock) {
-            this.swapProcess(process);
         }
     }
 
-    swapProcess(newProcess) {
-        for (const block of this.memoryBlocks) {
-            if (block.assigned && block.assignedProcess.state === "En espera") {
-                // Se mueve el proceso menos prioritario a memoria secundaria (swapping)
-                this.swappedProcesses.push(block.assignedProcess);
-                block.unassign();
-                block.assign(newProcess);
-                return;
+    assignMemory(process) {
+        try {
+            let assignedBlock = null;
+            for (const memoryBlock of this.memoryBlocks) {
+                if (!memoryBlock.assigned && memoryBlock.size >= process.size) {
+                    memoryBlock.assign(process);
+                    assignedBlock = memoryBlock;
+                    this.processes.push(process); // Solo agregar si se asigna memoria
+                    return true;
+                }
             }
+    
+            // Si no hay memoria suficiente, intentar swapping
+            if (!assignedBlock) {
+                return this.swapProcess(process);
+            }
+        } catch (error) {
+            console.error(error);
+            showError(error.message);
         }
+        return false;
+    }
+    
 
-        console.log(`No hay memoria disponible para ${newProcess.name}, incluso con swapping.`);
+    swapProcess(newProcess) {
+        try{
+            for (const block of this.memoryBlocks) {
+                if (block.assigned && block.assignedProcess.state === "En espera") {
+                    // Se mueve el proceso menos prioritario a memoria secundaria (swapping)
+                    this.swappedProcesses.push(block.assignedProcess);
+                    block.unassign();
+                    block.assign(newProcess);
+                    return true;
+                }
+            }
+            showError(`No hay memoria disponible para ${newProcess.name}, incluso con swapping.`);
+            return false;
+        }
+        catch(error){
+            console.error(error);
+            showError(error.message);
+        }
     }
 
     compactMemory() {
@@ -101,21 +147,26 @@ class MemoryManager {
     checkProcesses(time) {
         for (const block of this.memoryBlocks) {
             if (!block.assigned) continue;
-
-            block.assignedProcess.execute(time);
-            if (block.assignedProcess.state === "Terminado") {
-                block.unassign();
-
-                // Intentar reubicar o compactar memoria tras liberar un bloque
-                this.relocateProcess();
-                this.compactMemory();
-
-                // Revisar procesos en espera
-                for (const p of this.processes) {
-                    if (p.state === "En espera") {
-                        this.assignMemory(p);
+            try{
+                block.assignedProcess.execute(time);
+                if (block.assignedProcess.state === "Terminado") {
+                    block.unassign();
+    
+                    // Intentar reubicar o compactar memoria tras liberar un bloque
+                    this.relocateProcess();
+                    this.compactMemory();
+    
+                    // Revisar procesos en espera
+                    for (const p of this.processes) {
+                        if (p.state === "En espera") {
+                            this.assignMemory(p);
+                        }
                     }
                 }
+            }
+            catch(error){
+                console.error(error);
+                showError(error.message);
             }
         }
     }
@@ -137,7 +188,7 @@ class MemoryBlock {
             this.assignedProcess = process;
             this.assignedProcess.activate();
         } else {
-            throw new Error(`El bloque de memoria ${this.id} ya está asignado.`);
+            showError(`El bloque de memoria ${this.id} ya está asignado.`);
         }
     }
 
@@ -146,7 +197,7 @@ class MemoryBlock {
             this.assigned = false;
             this.assignedProcess = null;
         } else {
-            throw new Error(`El bloque de memoria ${this.id} ya está libre.`);
+            showError(`El bloque de memoria ${this.id} ya está libre.`);
         }
     }
 }
@@ -167,7 +218,7 @@ class Process {
         if (this.state !== "En ejecución") {
             this.state = "En ejecución";
         } else {
-            throw new Error("Este proceso ya está en ejecución.");
+            showError("Este proceso ya está en ejecución.");
         }
     }
 
@@ -175,13 +226,13 @@ class Process {
         if (this.state !== "Terminado") {
             this.state = "Terminado";
         } else {
-            throw new Error("Este proceso ya ha terminado.");
+            showError("Este proceso ya ha terminado.");
         }
     }
 
     execute(time) {
         if (this.state !== "En ejecución") {
-            throw new Error("Este proceso no está en ejecución.");
+            showError("Este proceso no está en ejecución.");
         }
 
         this.executionTime += time;
@@ -219,6 +270,12 @@ document.querySelector(".mblock-form").addEventListener("submit", (e) => {
     simulator.memoryManager.addMemoryBlock(size);
 });
 
+function removeMemoryBlock(id) {
+    simulator.memoryManager.removeMemoryBlock(id);
+    updateTable();
+}
+
+
 function updateTable() {
     const processes = simulator.getProcesses();
     const processesTable = document.querySelector(".processes-tbody");
@@ -246,8 +303,9 @@ function updateTable() {
         <tr>
             <td>${b.id}</td>
             <td>${b.size}</td>
-            <td>${b.assigned ? 'Si' : 'No'}</td>
+            <td>${b.assigned ? 'Sí' : 'No'}</td>
             <td>${b.assigned ? b.assignedProcess.name : 'Ninguno'}</td>
+            <td><button onclick="removeMemoryBlock(${b.id})">❌</button></td>
         </tr>
         `;
     }

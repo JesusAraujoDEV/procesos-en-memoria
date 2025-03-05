@@ -7,6 +7,8 @@
     <title>Simulación de gestión de procesos-memoria</title>
 </head>
 <body>
+    <div id="error-log" style="color: red; font-weight: bold; margin-top: 10px;"></div>
+
 
     <h3>Bloques de memoria</h3>
     <table>
@@ -34,6 +36,13 @@
         </tbody>
     </table>
 
+    <h4>Crear nuevo bloque de memoria</h4>
+    <form action="" class="mblock-form">
+        <label for="size">Memoria del bloque</label>
+        <input type="number" name="size" id="size"><br>
+        <button type="submit" onclick="">Crearr</button>
+    </form>
+
     <h4>Crear nuevo proceso</h4>
     <form action="" class="process-form">
         <label for="name">Nombre</label>
@@ -43,13 +52,6 @@
         <label for="executionTime">Tiempo máximo de ejecución</label>
         <input type="number" name="executionTime" id="executionTime"><br>
         <button type="submit">Crear</button>
-    </form>
-
-    <h4>Crear nuevo bloque de memoria</h4>
-    <form action="" class="mblock-form">
-        <label for="size">Memoria del bloque</label>
-        <input type="number" name="size" id="size"><br>
-        <button type="submit" onclick="">Crearr</button>
     </form>
 
     <button onclick="startSimulation()">Iniciar simulación</button>
