@@ -31,14 +31,14 @@ class MemorySimulator {
     }
 
     addProcess(name, size, executionTime) {
-        try{
+        try {
             const process = new Process(name, size, executionTime);
-            if(!this.memoryManager.assignMemory(process)){
+            if (!this.memoryManager.assignMemory(process)) {
                 return;
             }
-            this.memoryManager.processes.push(process);
-        }
-        catch(error){
+            console.log("Proceso añadido:", process);
+            console.log("Procesos en memoria:", this.memoryManager.processes);
+        } catch (error) {
             console.error(error);
             showError(error.message);
         }
@@ -86,7 +86,8 @@ class MemoryManager {
                 if (!memoryBlock.assigned && memoryBlock.size >= process.size) {
                     memoryBlock.assign(process);
                     assignedBlock = memoryBlock;
-                    this.processes.push(process); // Solo agregar si se asigna memoria
+                    this.processes.push(process); // ← Aquí se agrega el proceso
+                    console.log("Proceso agregado en assignMemory:", process);
                     return true;
                 }
             }
@@ -101,6 +102,7 @@ class MemoryManager {
         }
         return false;
     }
+    
     
 
     swapProcess(newProcess) {
@@ -253,6 +255,7 @@ function startSimulation() {
 function stopSimulation() {
     simulator.stop();
 }
+let contador2 = 0;
 
 document.querySelector(".process-form").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -261,6 +264,9 @@ document.querySelector(".process-form").addEventListener("submit", (e) => {
     const size = parseFloat(inputs["size"].value);
     const executionTime = parseFloat(inputs["executionTime"].value);
     simulator.addProcess(name, size, executionTime);
+    contador2++;
+    console.log("soy contador 2: ", contador2);
+    updateTable();
 });
 
 document.querySelector(".mblock-form").addEventListener("submit", (e) => {
@@ -268,6 +274,7 @@ document.querySelector(".mblock-form").addEventListener("submit", (e) => {
     const inputs = e.target.elements;
     const size = parseFloat(inputs["size"].value);
     simulator.memoryManager.addMemoryBlock(size);
+    updateTable();
 });
 
 function removeMemoryBlock(id) {
@@ -275,9 +282,13 @@ function removeMemoryBlock(id) {
     updateTable();
 }
 
+let contador = 0;
 
 function updateTable() {
+    console.log(simulator.getProcesses());
+    contador++;
     const processes = simulator.getProcesses();
+    console.log(processes);
     const processesTable = document.querySelector(".processes-tbody");
     processesTable.innerHTML = "";
     for (const p of processes) {
@@ -309,6 +320,8 @@ function updateTable() {
         </tr>
         `;
     }
+
+    console.log(contador);
 }
 
-setInterval(updateTable, 1000);
+//setInterval(updateTable, 1000);
